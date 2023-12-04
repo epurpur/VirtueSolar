@@ -97,7 +97,11 @@ print(f'There are {culpeper.shape[0]} parcels in Culpeper County, minus city of 
 This section is about address matching. 
 First I will drop out of state addresses
 Second I will match the mailing address to the property address. 
-
+       -For this, I can match either on full property address or just partial address. Full property address looks like this:
+              1625 Grove Street, Charlottesville, VA
+       -partial property address looks like this
+              ,Charlottesville, VA
+       For now I am choosing the partial property address. This is because full property address has typos and eliminates more results than necessary
 """
 
 albemarle = albemarle[albemarle['mail_state2'] == 'VA']
@@ -108,52 +112,71 @@ print()
 print('Dropping out of state mailing addresses')
 print()
 
-albemarle['full_mailing_address'] = albemarle['mailadd'] + ', ' + albemarle['mail_city'] + ', ' + albemarle['mail_state2']
-albemarle['full_property_address'] = albemarle['address'] + ', ' + albemarle['scity'] + ', ' + albemarle['state2']
-albemarle['address_match'] = np.where(albemarle['full_property_address'] == albemarle['full_mailing_address'], 'match', '')
-albemarle_test = albemarle[albemarle['address_match'] == 'match']
+# albemarle['full_mailing_address'] = albemarle['mailadd'] + ', ' + albemarle['mail_city'] + ', ' + albemarle['mail_state2']
+# albemarle['full_property_address'] = albemarle['address'] + ', ' + albemarle['scity'] + ', ' + albemarle['state2']
+# albemarle['address_match'] = np.where(albemarle['full_property_address'] == albemarle['full_mailing_address'], 'match', '')
+# albemarle_test = albemarle[albemarle['address_match'] == 'match']
 
 albemarle['full_mailing_address'] =  albemarle['mail_city'] + ', ' + albemarle['mail_state2']
 albemarle['full_property_address'] = albemarle['scity'] + ', ' + albemarle['state2']
 albemarle['address_match'] = np.where(albemarle['full_property_address'] == albemarle['full_mailing_address'], 'match', '')
-albemarle_test2 = albemarle[albemarle['address_match'] == 'match']
+albemarle = albemarle[albemarle['address_match'] == 'match']
 
 
-charlottesville['full_mailing_address'] = charlottesville['mailadd'] + ', ' + charlottesville['mail_city'] + ', ' + charlottesville['mail_state2']
-charlottesville['full_property_address'] = charlottesville['address'] + ', ' + charlottesville['scity'] + ', ' + charlottesville['state2']
-charlottesville['address_match'] = np.where(charlottesville['full_property_address'] == charlottesville['full_mailing_address'], 'match', '')
-charlottesville_test = charlottesville[charlottesville['address_match'] == 'match']
+# charlottesville['full_mailing_address'] = charlottesville['mailadd'] + ', ' + charlottesville['mail_city'] + ', ' + charlottesville['mail_state2']
+# charlottesville['full_property_address'] = charlottesville['address'] + ', ' + charlottesville['scity'] + ', ' + charlottesville['state2']
+# charlottesville['address_match'] = np.where(charlottesville['full_property_address'] == charlottesville['full_mailing_address'], 'match', '')
+# charlottesville_test = charlottesville[charlottesville['address_match'] == 'match']
 
 charlottesville['full_mailing_address'] = charlottesville['mail_city'] + ', ' + charlottesville['mail_state2']
 charlottesville['full_property_address'] = charlottesville['scity'] + ', ' + charlottesville['state2']
 charlottesville['address_match'] = np.where(charlottesville['full_property_address'] == charlottesville['full_mailing_address'], 'match', '')
-charlottesville_test2 = charlottesville[charlottesville['address_match'] == 'match']
+charlottesville = charlottesville[charlottesville['address_match'] == 'match']
 
-culpeper['full_mailing_address'] = culpeper['mailadd'] + ', ' + culpeper['mail_city'] + ', ' + culpeper['mail_state2']
-culpeper['full_property_address'] = culpeper['address'] + ', ' + culpeper['scity'] + ', ' + culpeper['state2']
-culpeper['address_match'] = np.where(culpeper['full_property_address'] == culpeper['full_mailing_address'], 'match', '')
-culpeper_test = culpeper[culpeper['address_match'] == 'match']
+# culpeper['full_mailing_address'] = culpeper['mailadd'] + ', ' + culpeper['mail_city'] + ', ' + culpeper['mail_state2']
+# culpeper['full_property_address'] = culpeper['address'] + ', ' + culpeper['scity'] + ', ' + culpeper['state2']
+# culpeper['address_match'] = np.where(culpeper['full_property_address'] == culpeper['full_mailing_address'], 'match', '')
+# culpeper_test = culpeper[culpeper['address_match'] == 'match']
 
 culpeper['full_mailing_address'] = culpeper['mail_city'] + ', ' + culpeper['mail_state2']
 culpeper['full_property_address'] = culpeper['scity'] + ', ' + culpeper['state2']
 culpeper['address_match'] = np.where(culpeper['full_property_address'] == culpeper['full_mailing_address'], 'match', '')
-culpeper_test2 = culpeper[culpeper['address_match'] == 'match']
+culpeper = culpeper[culpeper['address_match'] == 'match']
 
 print()
 print('Matching addresses')
 print()
-
 
 print(f'There are {albemarle.shape[0]} parcels in Albemarle County')
 print(f'There are {charlottesville.shape[0]} parcels in Charlottesville City')
 print(f'There are {culpeper.shape[0]} parcels in Culpeper County, minus city of Culpeper')
 
 
-
-####START HERE. did i make the not north facing slopes correctly?
 ### Remove properties that are on a north facing slope
-# north_facing_slopes = gpd.read_file()
+"""
+For this step I will read in the VA_North_Facing_Vector file and remove all parcels from Albemarle, Charlottesville, Culpeper 
+that intersect with this layer. 
+"""
+north_facing_slopes = gpd.read_file('/Users/ep9k/Desktop/VirtueSolar/VA_North_Facing_Vector.gpkg')
 
+#######START HERE
+print('Removing parcels on north facing slopes')
+
+# Perform a left join
+albemarle_result = gpd.sjoin(albemarle, north_facing_slopes, how='left', op='intersects')
+charlottesville_result = gpd.sjoin(charlottesville, north_facing_slopes, how='left', op='intersects')
+culpeper_result = gpd.sjoin(culpeper, north_facing_slopes, how='left', op='intersects')
+
+
+# Filter rows where there is no intersection with north_facing_slopes
+albemarle_no_intersection = albemarle_result[albemarle_result['DN'].isnull()]
+charlottesville_no_intersection = charlottesville_results[charlottesville_result['DN'].isnull()]
+culpeper_no_intersection = culpeper_result[culpeper_result['DN'].isnull)]
+
+# export no_intersection to desktop
+# albemarle_no_intersection.to_file('/Users/ep9k/Desktop/Albemarle_test.gpkg', driver='GPKG')
+# charlottesville_no_intersection.to_file('/Users/ep9k/Desktop/Charlottesville_test.gpkg', driver='GPKG')
+# culpeper_no_intersection.to_file('/Users/ep9k/Desktop/Culpeper_test.gpkg', driver='GPKG')
 
 
 
