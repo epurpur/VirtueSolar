@@ -2,6 +2,7 @@
 
 import pandas as pd
 import geopandas as gpd
+import numpy as np
 
 
 ### import county geopackage datasets
@@ -73,8 +74,10 @@ Albemarle - all houses with improvval > $250k
 Charlottesville - all houses with parval > $350k and townhomes > $400k.  There is actually no zoning information to indicate a townhome. 
 Culpeper - all houses with improvval > $250k
 """
-albemarle = albemarle[(albemarle['improvval'] > 250000) | ((albemarle['usedesc'] == 'Residential -- Townhouse') & (albemarle['improvval'] > 400000))] #investigate this line some more
+# albemarle = albemarle[((albemarle['usedesc'] == 'Residential -- Townhouse') & (albemarle['improvval'] > 400000))]
 # albemarle = albemarle[albemarle['improvval'] > 250000]
+
+albemarle = albemarle[(albemarle['improvval'] > 250000) | ((albemarle['usedesc'] == 'Residential -- Townhouse') & (albemarle['improvval'] > 400000))] #investigate this line some more
 charlottesville = charlottesville[charlottesville['parval'] > 350000]
 culpeper = culpeper[culpeper['improvval'] > 250000]
 
@@ -86,6 +89,66 @@ print('After pricing filter...')
 print(f'There are {albemarle.shape[0]} parcels in Albemarle County')
 print(f'There are {charlottesville.shape[0]} parcels in Charlottesville City')
 print(f'There are {culpeper.shape[0]} parcels in Culpeper County, minus city of Culpeper')
+
+
+
+### Remove properties where mailing address is not local address. This is because we want to focus on primary residences
+"""
+This section is about address matching. 
+First I will drop out of state addresses
+Second I will match the mailing address to the property address. 
+
+"""
+
+albemarle = albemarle[albemarle['mail_state2'] == 'VA']
+charlottesville = charlottesville[charlottesville['mail_state2'] == 'VA']
+culpeper = culpeper[culpeper['mail_state2'] == 'VA']
+
+print()
+print('Dropping out of state mailing addresses')
+print()
+
+albemarle['full_mailing_address'] = albemarle['mailadd'] + ', ' + albemarle['mail_city'] + ', ' + albemarle['mail_state2']
+albemarle['full_property_address'] = albemarle['address'] + ', ' + albemarle['scity'] + ', ' + albemarle['state2']
+albemarle['address_match'] = np.where(albemarle['full_property_address'] == albemarle['full_mailing_address'], 'match', '')
+albemarle_test = albemarle[albemarle['address_match'] == 'match']
+
+albemarle['full_mailing_address'] =  albemarle['mail_city'] + ', ' + albemarle['mail_state2']
+albemarle['full_property_address'] = albemarle['scity'] + ', ' + albemarle['state2']
+albemarle['address_match'] = np.where(albemarle['full_property_address'] == albemarle['full_mailing_address'], 'match', '')
+albemarle_test2 = albemarle[albemarle['address_match'] == 'match']
+
+
+charlottesville['full_mailing_address'] = charlottesville['mailadd'] + ', ' + charlottesville['mail_city'] + ', ' + charlottesville['mail_state2']
+charlottesville['full_property_address'] = charlottesville['address'] + ', ' + charlottesville['scity'] + ', ' + charlottesville['state2']
+charlottesville['address_match'] = np.where(charlottesville['full_property_address'] == charlottesville['full_mailing_address'], 'match', '')
+charlottesville_test = charlottesville[charlottesville['address_match'] == 'match']
+
+charlottesville['full_mailing_address'] = charlottesville['mail_city'] + ', ' + charlottesville['mail_state2']
+charlottesville['full_property_address'] = charlottesville['scity'] + ', ' + charlottesville['state2']
+charlottesville['address_match'] = np.where(charlottesville['full_property_address'] == charlottesville['full_mailing_address'], 'match', '')
+charlottesville_test2 = charlottesville[charlottesville['address_match'] == 'match']
+
+culpeper['full_mailing_address'] = culpeper['mailadd'] + ', ' + culpeper['mail_city'] + ', ' + culpeper['mail_state2']
+culpeper['full_property_address'] = culpeper['address'] + ', ' + culpeper['scity'] + ', ' + culpeper['state2']
+culpeper['address_match'] = np.where(culpeper['full_property_address'] == culpeper['full_mailing_address'], 'match', '')
+culpeper_test = culpeper[culpeper['address_match'] == 'match']
+
+culpeper['full_mailing_address'] = culpeper['mail_city'] + ', ' + culpeper['mail_state2']
+culpeper['full_property_address'] = culpeper['scity'] + ', ' + culpeper['state2']
+culpeper['address_match'] = np.where(culpeper['full_property_address'] == culpeper['full_mailing_address'], 'match', '')
+culpeper_test2 = culpeper[culpeper['address_match'] == 'match']
+
+print()
+print('Matching addresses')
+print()
+
+
+print(f'There are {albemarle.shape[0]} parcels in Albemarle County')
+print(f'There are {charlottesville.shape[0]} parcels in Charlottesville City')
+print(f'There are {culpeper.shape[0]} parcels in Culpeper County, minus city of Culpeper')
+
+
 
 ####START HERE. did i make the not north facing slopes correctly?
 ### Remove properties that are on a north facing slope
