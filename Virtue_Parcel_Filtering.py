@@ -174,10 +174,6 @@ albemarle_no_intersection = albemarle_result[albemarle_result['DN'].isnull()]
 charlottesville_no_intersection = charlottesville_result[charlottesville_result['DN'].isnull()]
 culpeper_no_intersection = culpeper_result[culpeper_result['DN'].isnull()]
 
-# export no_intersection to desktop
-albemarle_no_intersection.to_file('/Users/ep9k/Desktop/Albemarle_test.gpkg', driver='GPKG')
-charlottesville_no_intersection.to_file('/Users/ep9k/Desktop/Charlottesville_test.gpkg', driver='GPKG')
-culpeper_no_intersection.to_file('/Users/ep9k/Desktop/Culpeper_test.gpkg', driver='GPKG')
 
 print()
 print('~~~~~~~~~Final Results~~~~~~~~~~')
@@ -191,8 +187,31 @@ print()
 print('After Spatial Filter')
 print(f'Albemarle : {albemarle_no_intersection.shape[0]}')
 print(f'Charlottesville : {charlottesville_no_intersection.shape[0]}')
-print(f'Culpeper : {culpeper_no_interaction.shape[0]}')
+print(f'Culpeper : {culpeper_no_intersection.shape[0]}')
+print()
+print()
+print('Exporting results before and after spatial filter')
 
+# export counties before spatial filter as csv
+albemarle.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Albemarle_No_Spatial.csv')
+charlottesville.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Charlottesville_No_Spatial.csv')
+culpeper.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Culpeper_No_Spatial.csv')
+
+# export counties before spatial filter as geopackage
+albemarle.to_file('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Albemarle_No_Spatial.gpkg', driver='GPKG')
+charlottesville.to_file('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Charlottesville_No_Spatial.gpkg', driver='GPKG')
+culpeper.to_file('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Culpeper_No_Spatial.gpkg', driver='GPKG')
+
+
+# export counties after spatial filter as csv
+albemarle_no_intersection.to_csv('/Users/ep9k/Desktop/VirtueSolar/AfterSpatialFilter/Albemarle_Spatial.csv')
+charlottesville_no_intersection.to_csv('/Users/ep9k/Desktop/VirtueSolar/AfterSpatialFilter/Charlottesville_Spatial.csv')
+culpeper_no_intersection.to_csv('/Users/ep9k/Desktop/VirtueSolar/AfterSpatialFilter/Culpeper_Spatial.csv')
+
+# export counties after spatial filter as geopackage
+albemarle.to_file('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Albemarle_Spatial.gpkg', driver='GPKG')
+charlottesville.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Charlottesville_No_Spatial.gpkg', driver='GPKG')
+culpeper.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Culpeper_No_Spatial.gpkg', driver='GPKG')
 
 
 
