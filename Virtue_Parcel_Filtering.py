@@ -159,8 +159,9 @@ that intersect with this layer.
 """
 north_facing_slopes = gpd.read_file('/Users/ep9k/Desktop/VirtueSolar/VA_North_Facing_Vector.gpkg')
 
-#######START HERE
+print()
 print('Removing parcels on north facing slopes')
+print()
 
 # Perform a left join
 albemarle_result = gpd.sjoin(albemarle, north_facing_slopes, how='left', op='intersects')
@@ -170,14 +171,27 @@ culpeper_result = gpd.sjoin(culpeper, north_facing_slopes, how='left', op='inter
 
 # Filter rows where there is no intersection with north_facing_slopes
 albemarle_no_intersection = albemarle_result[albemarle_result['DN'].isnull()]
-charlottesville_no_intersection = charlottesville_results[charlottesville_result['DN'].isnull()]
-culpeper_no_intersection = culpeper_result[culpeper_result['DN'].isnull)]
+charlottesville_no_intersection = charlottesville_result[charlottesville_result['DN'].isnull()]
+culpeper_no_intersection = culpeper_result[culpeper_result['DN'].isnull()]
 
 # export no_intersection to desktop
-# albemarle_no_intersection.to_file('/Users/ep9k/Desktop/Albemarle_test.gpkg', driver='GPKG')
-# charlottesville_no_intersection.to_file('/Users/ep9k/Desktop/Charlottesville_test.gpkg', driver='GPKG')
-# culpeper_no_intersection.to_file('/Users/ep9k/Desktop/Culpeper_test.gpkg', driver='GPKG')
+albemarle_no_intersection.to_file('/Users/ep9k/Desktop/Albemarle_test.gpkg', driver='GPKG')
+charlottesville_no_intersection.to_file('/Users/ep9k/Desktop/Charlottesville_test.gpkg', driver='GPKG')
+culpeper_no_intersection.to_file('/Users/ep9k/Desktop/Culpeper_test.gpkg', driver='GPKG')
 
+print()
+print('~~~~~~~~~Final Results~~~~~~~~~~')
+print()
+print('Before Spatial Filter')
+print(f'Albemarle : {albemarle.shape[0]}')
+print(f'Charlottesville : {charlottesville.shape[0]}')
+print(f'Culpeper : {culpeper.shape[0]}')
+print()
+print()
+print('After Spatial Filter')
+print(f'Albemarle : {albemarle_no_intersection.shape[0]}')
+print(f'Charlottesville : {charlottesville_no_intersection.shape[0]}')
+print(f'Culpeper : {culpeper_no_interaction.shape[0]}')
 
 
 
