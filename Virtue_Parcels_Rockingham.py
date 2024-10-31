@@ -12,8 +12,17 @@ print(f'There are {rockingham.shape[0]} parcels in Rockingham County')
 ### look at zoning for each county/city
 """
 Rockingham zoning values in "zoning" column
-'TOWN','A1','R2','A2','RR1','R4','RV',None,'R3','R1','I1','MH1','S1','PG','R5','B2','B1','C1','PMF','PCD','I2','RS1','PSF','PMR']
-
+['TOWN',
+ 'A1',
+ 'A2',
+ None,
+ 'I1',
+ 'S1',
+ 'C1',
+ 'PMF',
+ 'PCD',
+ 'I2',
+ 'PSF']
 """
 
 #removing unwanted zoning from each county
@@ -21,7 +30,17 @@ print()
 print('Removing parcels with unwanted zoning from each county')
 print()
 
-unwanted_zoning = ['TOWN', 'A1', None, 'RV', 'I1', 'I2', 'PSF','PMR']
+unwanted_zoning = ['TOWN',
+ 'A1',
+ 'A2',
+ None,
+ 'I1',
+ 'S1',
+ 'C1',
+ 'PMF',
+ 'PCD',
+ 'I2',
+ 'PSF']
 
 rockingham = rockingham[~rockingham['zoning'].isin(unwanted_zoning)]
 
