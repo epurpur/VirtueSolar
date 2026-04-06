@@ -213,14 +213,34 @@ print('Removing parcels on north facing slopes')
 print()
 
 # Perform a left join
-henrico_result = gpd.sjoin(henrico, north_facing_slopes, how='left', op='intersects')
+henrico_result = gpd.sjoin(henrico, north_facing_slopes, how='left', predicate='intersects')
 
 # Filter rows where there is no intersection with north_facing_slopes
 henrico_no_intersection = henrico_result[henrico_result['DN'].isnull()]
+
+
+### Filter properties by utilities provider (RVEC and Dominion)
+rvec_territory = gpd.read_file("/Users/ep9k/Desktop/VirtueSolar/VA_Electric_Utilities/Rappahannock.gpkg")
+dominion_territory = gpd.read_file("/Users/ep9k/Desktop/VirtueSolar/VA_Electric_Utilities/DominionEnergy.gpkg")
+
+# convert utility territories to correct CRS
+rvec_territory = rvec_territory.to_crs(henrico_no_intersection.crs)
+dominion_territory = dominion_territory.to_crs(henrico_no_intersection.crs)
+
+# previous spatial join has been done on these layers. Need to remove 'index_right' column in order to do another spatial join
+henrico_no_intersection = henrico_no_intersection.drop(columns=['index_right', 'DN'], errors='ignore')
+
+# Spatial intersection of counties and utility territory
+henrico_rvec = gpd.sjoin(henrico_no_intersection, rvec_territory, how='inner', predicate='intersects')
+henrico_dominion = gpd.sjoin(henrico_no_intersection, dominion_territory, how='inner', predicate='intersects')
+
+
 
 print('After Spatial Filter')
 print(f'Henrico : {henrico_no_intersection.shape[0]}')
 
 print('Exporting results after spatial filter')
 henrico_no_intersection.to_csv('/Users/ep9k/Desktop/VirtueSolar/AfterSpatialFilter/Henrico_Spatial.csv')
+henrico_rvec.to_csv('/Users/ep9k/Desktop/VirtueSolar/UtilityProviderByCounty/Henrico_RVEC.csv')
+henrico_dominion.to_csv('/Users/ep9k/Desktop/VirtueSolar/UtilityProviderByCounty/Henrico_Dominion.csv')
 

@@ -68,27 +68,27 @@ print(f'There are {culpeper.shape[0]} parcels in Culpeper County, minus city of 
 
 
 
-### Remove properties with less than certain property value
-"""
-Albemarle - all houses with improvval > $250k
-Charlottesville - all houses with parval > $350k and townhomes > $400k.  There is actually no zoning information to indicate a townhome. 
-Culpeper - all houses with improvval > $250k
-"""
-# albemarle = albemarle[((albemarle['usedesc'] == 'Residential -- Townhouse') & (albemarle['improvval'] > 400000))]
-# albemarle = albemarle[albemarle['improvval'] > 250000]
+# ### Remove properties with less than certain property value
+# """
+# Albemarle - all houses with improvval > $250k
+# Charlottesville - all houses with parval > $350k and townhomes > $400k.  There is actually no zoning information to indicate a townhome. 
+# Culpeper - all houses with improvval > $250k
+# """
+# # albemarle = albemarle[((albemarle['usedesc'] == 'Residential -- Townhouse') & (albemarle['improvval'] > 400000))]
+# # albemarle = albemarle[albemarle['improvval'] > 250000]
 
-albemarle = albemarle[(albemarle['improvval'] > 250000) | ((albemarle['usedesc'] == 'Residential -- Townhouse') & (albemarle['improvval'] > 400000))] #investigate this line some more
-charlottesville = charlottesville[charlottesville['parval'] > 350000]
-culpeper = culpeper[culpeper['improvval'] > 250000]
+# albemarle = albemarle[(albemarle['improvval'] > 250000) | ((albemarle['usedesc'] == 'Residential -- Townhouse') & (albemarle['improvval'] > 400000))] #investigate this line some more
+# charlottesville = charlottesville[charlottesville['parval'] > 350000]
+# culpeper = culpeper[culpeper['improvval'] > 250000]
 
-print()
-print('Removing parcels with less than desired property value')
-print()
+# print()
+# print('Removing parcels with less than desired property value')
+# print()
 
-print('After pricing filter...')
-print(f'There are {albemarle.shape[0]} parcels in Albemarle County')
-print(f'There are {charlottesville.shape[0]} parcels in Charlottesville City')
-print(f'There are {culpeper.shape[0]} parcels in Culpeper County, minus city of Culpeper')
+# print('After pricing filter...')
+# print(f'There are {albemarle.shape[0]} parcels in Albemarle County')
+# print(f'There are {charlottesville.shape[0]} parcels in Charlottesville City')
+# print(f'There are {culpeper.shape[0]} parcels in Culpeper County, minus city of Culpeper')
 
 
 
@@ -164,9 +164,9 @@ print('Removing parcels on north facing slopes')
 print()
 
 # Perform a left join
-albemarle_result = gpd.sjoin(albemarle, north_facing_slopes, how='left', op='intersects')
-charlottesville_result = gpd.sjoin(charlottesville, north_facing_slopes, how='left', op='intersects')
-culpeper_result = gpd.sjoin(culpeper, north_facing_slopes, how='left', op='intersects')
+albemarle_result = gpd.sjoin(albemarle, north_facing_slopes, how='left', predicate='intersects')
+charlottesville_result = gpd.sjoin(charlottesville, north_facing_slopes, how='left', predicate='intersects')
+culpeper_result = gpd.sjoin(culpeper, north_facing_slopes, how='left', predicate='intersects')
 
 
 # Filter rows where there is no intersection with north_facing_slopes
@@ -175,43 +175,92 @@ charlottesville_no_intersection = charlottesville_result[charlottesville_result[
 culpeper_no_intersection = culpeper_result[culpeper_result['DN'].isnull()]
 
 
-print()
-print('~~~~~~~~~Final Results~~~~~~~~~~')
-print()
-print('Before Spatial Filter')
-print(f'Albemarle : {albemarle.shape[0]}')
-print(f'Charlottesville : {charlottesville.shape[0]}')
-print(f'Culpeper : {culpeper.shape[0]}')
-print()
-print()
-print('After Spatial Filter')
-print(f'Albemarle : {albemarle_no_intersection.shape[0]}')
-print(f'Charlottesville : {charlottesville_no_intersection.shape[0]}')
-print(f'Culpeper : {culpeper_no_intersection.shape[0]}')
-print()
-print()
-print('Exporting results before and after spatial filter')
 
-# export counties before spatial filter as csv
-albemarle.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Albemarle_No_Spatial.csv')
-charlottesville.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Charlottesville_No_Spatial.csv')
-culpeper.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Culpeper_No_Spatial.csv')
+### Filter properties by utilities provider (RVEC and Dominion)
+rvec_territory = gpd.read_file("/Users/ep9k/Desktop/VirtueSolar/VA_Electric_Utilities/Rappahannock.gpkg")
+dominion_territory = gpd.read_file("/Users/ep9k/Desktop/VirtueSolar/VA_Electric_Utilities/DominionEnergy.gpkg")
 
-# export counties before spatial filter as geopackage
-albemarle.to_file('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Albemarle_No_Spatial.gpkg', driver='GPKG')
-charlottesville.to_file('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Charlottesville_No_Spatial.gpkg', driver='GPKG')
-culpeper.to_file('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Culpeper_No_Spatial.gpkg', driver='GPKG')
+# convert utility territories to correct CRS
+rvec_territory = rvec_territory.to_crs(albemarle_no_intersection.crs)
+dominion_territory = dominion_territory.to_crs(albemarle_no_intersection.crs)
+
+# previous spatial join has been done on these layers. Need to remove 'index_right' column in order to do another spatial join
+albemarle_no_intersection = albemarle_no_intersection.drop(columns=['index_right', 'DN'], errors='ignore')
+charlottesville_no_intersection = charlottesville_no_intersection.drop(columns=['index_right', 'DN'], errors='ignore')
+culpeper_no_intersection = culpeper_no_intersection.drop(columns=['index_right', 'DN'], errors='ignore')
+
+# Spatial intersection of counties and utility territory
+albemarle_rvec = gpd.sjoin(albemarle_no_intersection, rvec_territory, how='inner', predicate='intersects')
+albemarle_dominion = gpd.sjoin(albemarle_no_intersection, dominion_territory, how='inner', predicate='intersects')
+charlottesville_rvec = gpd.sjoin(charlottesville_no_intersection, rvec_territory, how='inner', predicate='intersects')
+charlottesville_dominion = gpd.sjoin(charlottesville_no_intersection, dominion_territory, how='inner', predicate='intersects')
+culpeper_rvec = gpd.sjoin(culpeper_no_intersection, rvec_territory, how='inner', predicate='intersects')
+culpeper_dominion = gpd.sjoin(culpeper_no_intersection, dominion_territory, how='inner', predicate='intersects')
 
 
-# export counties after spatial filter as csv
-albemarle_no_intersection.to_csv('/Users/ep9k/Desktop/VirtueSolar/AfterSpatialFilter/Albemarle_Spatial.csv')
-charlottesville_no_intersection.to_csv('/Users/ep9k/Desktop/VirtueSolar/AfterSpatialFilter/Charlottesville_Spatial.csv')
-culpeper_no_intersection.to_csv('/Users/ep9k/Desktop/VirtueSolar/AfterSpatialFilter/Culpeper_Spatial.csv')
-
-# export counties after spatial filter as geopackage
-albemarle.to_file('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Albemarle_Spatial.gpkg', driver='GPKG')
-charlottesville.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Charlottesville_No_Spatial.gpkg', driver='GPKG')
-culpeper.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Culpeper_No_Spatial.gpkg', driver='GPKG')
 
 
+
+
+
+
+# print()
+# print('~~~~~~~~~Final Results~~~~~~~~~~')
+# print()
+# print('Before Spatial Filter')
+# print(f'Albemarle : {albemarle.shape[0]}')
+# print(f'Charlottesville : {charlottesville.shape[0]}')
+# print(f'Culpeper : {culpeper.shape[0]}')
+# print()
+# print()
+# print('After Spatial Filter (removing north facing properties)')
+# print(f'Albemarle : {albemarle_no_intersection.shape[0]}')
+# print(f'Charlottesville : {charlottesville_no_intersection.shape[0]}')
+# print(f'Culpeper : {culpeper_no_intersection.shape[0]}')
+# print()
+# print()
+# print(f'Albemarle RVEC : {albemarle_rvec.shape[0]}')
+# print(f'Albemarle Dominion: {albemarle_dominion.shape[0]}')
+# print(f'Charlottesville RVEC: {charlottesville_rvec.shape[0]}')
+# print(f'Charlottesville Dominion: {charlottesville_dominion.shape[0]}')
+# print(f'Culpeper RVEC: {culpeper_rvec.shape[0]}')
+# print(f'Culpeper Dominion: {culpeper_dominion.shape[0]}')
+
+
+
+
+# print('Exporting results before and after spatial filter')
+
+
+
+
+# # export counties before spatial filter as csv
+# albemarle.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Albemarle_No_Spatial.csv')
+# charlottesville.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Charlottesville_No_Spatial.csv')
+# culpeper.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Culpeper_No_Spatial.csv')
+
+# # export counties before spatial filter as geopackage
+# albemarle.to_file('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Albemarle_No_Spatial.gpkg', driver='GPKG')
+# charlottesville.to_file('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Charlottesville_No_Spatial.gpkg', driver='GPKG')
+# culpeper.to_file('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Culpeper_No_Spatial.gpkg', driver='GPKG')
+
+
+# # export counties after spatial filter as csv
+# albemarle_no_intersection.to_csv('/Users/ep9k/Desktop/VirtueSolar/AfterSpatialFilter/Albemarle_Spatial.csv')
+# charlottesville_no_intersection.to_csv('/Users/ep9k/Desktop/VirtueSolar/AfterSpatialFilter/Charlottesville_Spatial.csv')
+# culpeper_no_intersection.to_csv('/Users/ep9k/Desktop/VirtueSolar/AfterSpatialFilter/Culpeper_Spatial.csv')
+
+# # export counties after spatial filter as geopackage
+# albemarle.to_file('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Albemarle_Spatial.gpkg', driver='GPKG')
+# charlottesville.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Charlottesville_No_Spatial.gpkg', driver='GPKG')
+# culpeper.to_csv('/Users/ep9k/Desktop/VirtueSolar/BeforeSpatialFilter/Culpeper_No_Spatial.gpkg', driver='GPKG')
+
+
+# export counties by utility provider
+albemarle_rvec.to_csv('/Users/ep9k/Desktop/VirtueSolar/UtilityProviderByCounty/Albemarle_RVEC.csv')
+albemarle_dominion.to_csv('/Users/ep9k/Desktop/VirtueSolar/UtilityProviderByCounty/Albemarle_Dominion.csv')
+charlottesville_rvec.to_csv('/Users/ep9k/Desktop/VirtueSolar/UtilityProviderByCounty/Charlottesville_RVEC.csv')
+charlottesville_dominion.to_csv('/Users/ep9k/Desktop/VirtueSolar/UtilityProviderByCounty/Charlottesville_Dominion.csv')
+culpeper_rvec.to_csv('/Users/ep9k/Desktop/VirtueSolar/UtilityProviderByCounty/Culpeper_RVEC.csv')
+culpeper_dominion.to_csv('/Users/ep9k/Desktop/VirtueSolar/UtilityProviderByCounty/Culpeper_Dominion.csv')
 

@@ -87,14 +87,34 @@ print('Removing parcels on north facing slopes')
 print()
 
 # Perform a left join
-rockingham_result = gpd.sjoin(rockingham, north_facing_slopes, how='left', op='intersects')
+rockingham_result = gpd.sjoin(rockingham, north_facing_slopes, how='left', predicate='intersects')
 
 # Filter rows where there is no intersection with north_facing_slopes
 rockingham_no_intersection = rockingham_result[rockingham_result['DN'].isnull()]
+
+
+### Filter properties by utilities provider (RVEC and Dominion)
+rvec_territory = gpd.read_file("/Users/ep9k/Desktop/VirtueSolar/VA_Electric_Utilities/Rappahannock.gpkg")
+dominion_territory = gpd.read_file("/Users/ep9k/Desktop/VirtueSolar/VA_Electric_Utilities/DominionEnergy.gpkg")
+
+# convert utility territories to correct CRS
+rvec_territory = rvec_territory.to_crs(rockingham_no_intersection.crs)
+dominion_territory = dominion_territory.to_crs(rockingham_no_intersection.crs)
+
+# previous spatial join has been done on these layers. Need to remove 'index_right' column in order to do another spatial join
+rockingham_no_intersection = rockingham_no_intersection.drop(columns=['index_right', 'DN'], errors='ignore')
+
+# Spatial intersection of counties and utility territory
+rockingham_rvec = gpd.sjoin(rockingham_no_intersection, rvec_territory, how='inner', predicate='intersects')
+rockingham_dominion = gpd.sjoin(rockingham_no_intersection, dominion_territory, how='inner', predicate='intersects')
+
+
 
 print('After Spatial Filter')
 print(f'Rockingham : {rockingham_no_intersection.shape[0]}')
 
 print('Exporting results after spatial filter')
 rockingham_no_intersection.to_csv('/Users/ep9k/Desktop/VirtueSolar/AfterSpatialFilter/Rockingham_Spatial.csv')
+rockingham_rvec.to_csv('/Users/ep9k/Desktop/VirtueSolar/UtilityProviderByCounty/Rockingham_RVEC.csv')
+rockingham_dominion.to_csv('/Users/ep9k/Desktop/VirtueSolar/UtilityProviderByCounty/Rockingham_Dominion.csv')
 
