@@ -74,22 +74,28 @@ lynchburg = lynchburg[lynchburg['address_match'] == 'match']
 
 print(f'There are {lynchburg.shape[0]} parcels in Lynchburg')
 
-### Remove properties that are on a north facing slope
-"""
-For this step I will read in the VA_North_Facing_Vector file and remove all parcels from Albemarle, Charlottesville, Culpeper 
-that intersect with this layer. 
-"""
-north_facing_slopes = gpd.read_file('/Users/ep9k/Desktop/VirtueSolar/VA_North_Facing_Vector.gpkg')
 
-print()
-print('Removing parcels on north facing slopes')
-print()
+### Remove properties with less than certain property value
+lynchburg = lynchburg[lynchburg['parval'] > 200000]
 
-# Perform a left join
-lynchburg_result = gpd.sjoin(lynchburg, north_facing_slopes, how='left', predicate='intersects')
 
-# Filter rows where there is no intersection with north_facing_slopes
-lynchburg_no_intersection = lynchburg_result[lynchburg_result['DN'].isnull()]
+
+# ### Remove properties that are on a north facing slope
+# """
+# For this step I will read in the VA_North_Facing_Vector file and remove all parcels from Albemarle, Charlottesville, Culpeper 
+# that intersect with this layer. 
+# """
+# north_facing_slopes = gpd.read_file('/Users/ep9k/Desktop/VirtueSolar/VA_North_Facing_Vector.gpkg')
+
+# print()
+# print('Removing parcels on north facing slopes')
+# print()
+
+# # Perform a left join
+# lynchburg_result = gpd.sjoin(lynchburg, north_facing_slopes, how='left', predicate='intersects')
+
+# # Filter rows where there is no intersection with north_facing_slopes
+# lynchburg_no_intersection = lynchburg_result[lynchburg_result['DN'].isnull()]
 
 
 ### Filter properties by utilities provider (RVEC and Dominion)
@@ -97,11 +103,11 @@ rvec_territory = gpd.read_file("/Users/ep9k/Desktop/VirtueSolar/VA_Electric_Util
 dominion_territory = gpd.read_file("/Users/ep9k/Desktop/VirtueSolar/VA_Electric_Utilities/DominionEnergy.gpkg")
 
 # convert utility territories to correct CRS
-rvec_territory = rvec_territory.to_crs(lynchburg_no_intersection.crs)
-dominion_territory = dominion_territory.to_crs(lynchburg_no_intersection.crs)
+rvec_territory = rvec_territory.to_crs(lynchburg.crs)
+dominion_territory = dominion_territory.to_crs(lynchburg.crs)
 
 # previous spatial join has been done on these layers. Need to remove 'index_right' column in order to do another spatial join
-lynchburg_no_intersection = lynchburg_no_intersection.drop(columns=['index_right', 'DN'], errors='ignore')
+lynchburg_no_intersection = lynchburg.drop(columns=['index_right', 'DN'], errors='ignore')
 
 
 # Spatial intersection of counties and utility territory

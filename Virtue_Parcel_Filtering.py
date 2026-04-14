@@ -68,27 +68,27 @@ print(f'There are {culpeper.shape[0]} parcels in Culpeper County, minus city of 
 
 
 
-# ### Remove properties with less than certain property value
-# """
-# Albemarle - all houses with improvval > $250k
-# Charlottesville - all houses with parval > $350k and townhomes > $400k.  There is actually no zoning information to indicate a townhome. 
-# Culpeper - all houses with improvval > $250k
-# """
-# # albemarle = albemarle[((albemarle['usedesc'] == 'Residential -- Townhouse') & (albemarle['improvval'] > 400000))]
-# # albemarle = albemarle[albemarle['improvval'] > 250000]
+### Remove properties with less than certain property value
+"""
+Albemarle - all houses with improvval > $200k
+Charlottesville - all houses with parval > $200k.  There is actually no zoning information to indicate a townhome. 
+Culpeper - all houses with improvval > $200k
+"""
+# albemarle = albemarle[((albemarle['usedesc'] == 'Residential -- Townhouse') & (albemarle['improvval'] > 400000))]
+# albemarle = albemarle[albemarle['improvval'] > 250000]
 
-# albemarle = albemarle[(albemarle['improvval'] > 250000) | ((albemarle['usedesc'] == 'Residential -- Townhouse') & (albemarle['improvval'] > 400000))] #investigate this line some more
-# charlottesville = charlottesville[charlottesville['parval'] > 350000]
-# culpeper = culpeper[culpeper['improvval'] > 250000]
+albemarle = albemarle[(albemarle['improvval'] > 200000) | ((albemarle['usedesc'] == 'Residential -- Townhouse') & (albemarle['improvval'] > 200000))] #investigate this line some more
+charlottesville = charlottesville[charlottesville['parval'] > 200000]
+culpeper = culpeper[culpeper['improvval'] > 200000]
 
-# print()
-# print('Removing parcels with less than desired property value')
-# print()
+print()
+print('Removing parcels with less than desired property value')
+print()
 
-# print('After pricing filter...')
-# print(f'There are {albemarle.shape[0]} parcels in Albemarle County')
-# print(f'There are {charlottesville.shape[0]} parcels in Charlottesville City')
-# print(f'There are {culpeper.shape[0]} parcels in Culpeper County, minus city of Culpeper')
+print('After pricing filter...')
+print(f'There are {albemarle.shape[0]} parcels in Albemarle County')
+print(f'There are {charlottesville.shape[0]} parcels in Charlottesville City')
+print(f'There are {culpeper.shape[0]} parcels in Culpeper County, minus city of Culpeper')
 
 
 
@@ -152,27 +152,27 @@ print(f'There are {charlottesville.shape[0]} parcels in Charlottesville City')
 print(f'There are {culpeper.shape[0]} parcels in Culpeper County, minus city of Culpeper')
 
 
-### Remove properties that are on a north facing slope
-"""
-For this step I will read in the VA_North_Facing_Vector file and remove all parcels from Albemarle, Charlottesville, Culpeper 
-that intersect with this layer. 
-"""
-north_facing_slopes = gpd.read_file('/Users/ep9k/Desktop/VirtueSolar/VA_North_Facing_Vector.gpkg')
+# ### Remove properties that are on a north facing slope
+# """
+# For this step I will read in the VA_North_Facing_Vector file and remove all parcels from Albemarle, Charlottesville, Culpeper 
+# that intersect with this layer. 
+# """
+# north_facing_slopes = gpd.read_file('/Users/ep9k/Desktop/VirtueSolar/VA_North_Facing_Vector.gpkg')
 
-print()
-print('Removing parcels on north facing slopes')
-print()
+# print()
+# print('Removing parcels on north facing slopes')
+# print()
 
-# Perform a left join
-albemarle_result = gpd.sjoin(albemarle, north_facing_slopes, how='left', predicate='intersects')
-charlottesville_result = gpd.sjoin(charlottesville, north_facing_slopes, how='left', predicate='intersects')
-culpeper_result = gpd.sjoin(culpeper, north_facing_slopes, how='left', predicate='intersects')
+# # Perform a left join
+# albemarle_result = gpd.sjoin(albemarle, north_facing_slopes, how='left', predicate='intersects')
+# charlottesville_result = gpd.sjoin(charlottesville, north_facing_slopes, how='left', predicate='intersects')
+# culpeper_result = gpd.sjoin(culpeper, north_facing_slopes, how='left', predicate='intersects')
 
 
-# Filter rows where there is no intersection with north_facing_slopes
-albemarle_no_intersection = albemarle_result[albemarle_result['DN'].isnull()]
-charlottesville_no_intersection = charlottesville_result[charlottesville_result['DN'].isnull()]
-culpeper_no_intersection = culpeper_result[culpeper_result['DN'].isnull()]
+# # Filter rows where there is no intersection with north_facing_slopes
+# albemarle_no_intersection = albemarle_result[albemarle_result['DN'].isnull()]
+# charlottesville_no_intersection = charlottesville_result[charlottesville_result['DN'].isnull()]
+# culpeper_no_intersection = culpeper_result[culpeper_result['DN'].isnull()]
 
 
 
@@ -181,13 +181,13 @@ rvec_territory = gpd.read_file("/Users/ep9k/Desktop/VirtueSolar/VA_Electric_Util
 dominion_territory = gpd.read_file("/Users/ep9k/Desktop/VirtueSolar/VA_Electric_Utilities/DominionEnergy.gpkg")
 
 # convert utility territories to correct CRS
-rvec_territory = rvec_territory.to_crs(albemarle_no_intersection.crs)
-dominion_territory = dominion_territory.to_crs(albemarle_no_intersection.crs)
+rvec_territory = rvec_territory.to_crs(albemarle.crs)
+dominion_territory = dominion_territory.to_crs(albemarle.crs)
 
 # previous spatial join has been done on these layers. Need to remove 'index_right' column in order to do another spatial join
-albemarle_no_intersection = albemarle_no_intersection.drop(columns=['index_right', 'DN'], errors='ignore')
-charlottesville_no_intersection = charlottesville_no_intersection.drop(columns=['index_right', 'DN'], errors='ignore')
-culpeper_no_intersection = culpeper_no_intersection.drop(columns=['index_right', 'DN'], errors='ignore')
+albemarle_no_intersection = albemarle.drop(columns=['index_right', 'DN'], errors='ignore')
+charlottesville_no_intersection = charlottesville.drop(columns=['index_right', 'DN'], errors='ignore')
+culpeper_no_intersection = culpeper.drop(columns=['index_right', 'DN'], errors='ignore')
 
 # Spatial intersection of counties and utility territory
 albemarle_rvec = gpd.sjoin(albemarle_no_intersection, rvec_territory, how='inner', predicate='intersects')
